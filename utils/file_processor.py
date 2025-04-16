@@ -1,5 +1,6 @@
 import os
 import logging
+import io
 from werkzeug.utils import secure_filename
 
 # Set up logging
@@ -184,3 +185,37 @@ def get_folder_size(folder_path):
             total_size += get_folder_size(file_path)
     
     return total_size
+
+def create_docx_from_text(text):
+    """
+    Create a DOCX file from text content
+    
+    Args:
+        text (str): Text content to convert to DOCX
+        
+    Returns:
+        BytesIO: BytesIO object containing the DOCX file
+    """
+    if not DOCX_SUPPORT:
+        logger.error("python-docx not installed. Cannot create DOCX file.")
+        return None
+    
+    try:
+        # Create a new Document
+        doc = docx.Document()
+        
+        # Split text by paragraphs and add each paragraph to the document
+        paragraphs = text.split('\n')
+        for para in paragraphs:
+            if para.strip():  # Skip empty paragraphs
+                doc.add_paragraph(para)
+        
+        # Save the document to a BytesIO object
+        docx_bytes = io.BytesIO()
+        doc.save(docx_bytes)
+        docx_bytes.seek(0)
+        
+        return docx_bytes
+    except Exception as e:
+        logger.error(f"Error creating DOCX file: {str(e)}")
+        return None

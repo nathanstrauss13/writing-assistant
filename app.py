@@ -1,6 +1,6 @@
 import os
 import uuid
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, send_file
 from werkzeug.utils import secure_filename
 from anthropic import Anthropic
 from dotenv import load_dotenv
@@ -8,7 +8,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 # Import utility modules
-from utils.file_processor import extract_text_from_folder
+from utils.file_processor import extract_text_from_folder, create_docx_from_text
 from utils.prompt_builder import optimize_prompt_for_token_limits, FORMAT_DETAILS
 from utils.cleanup import cleanup_old_files, get_storage_stats
 
@@ -229,6 +229,27 @@ def result():
         return redirect(url_for('index'))
     
     return render_template('result.html', content=generated_content)
+
+@app.route('/download-docx')
+def download_docx():
+    """Download the generated content as a DOCX file"""
+    generated_content = session.get('generated_content', '')
+    if not generated_content:
+        return redirect(url_for('index'))
+    
+    # Convert the content to a DOCX file
+    docx_bytes = create_docx_from_text(generated_content)
+    if not docx_bytes:
+        app.logger.error("Failed to create DOCX file")
+        return jsonify({'error': 'Failed to create DOCX file'}), 500
+    
+    # Return the DOCX file as a download
+    return send_file(
+        docx_bytes,
+        mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        as_attachment=True,
+        download_name='generated_content.docx'
+    )
 
 @app.route('/stats')
 def stats():

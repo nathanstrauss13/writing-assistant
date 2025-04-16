@@ -181,13 +181,15 @@
                 URL.revokeObjectURL(url);
             });
             
-            // Download as DOCX functionality (placeholder - would require a server-side implementation)
+            // Download as DOCX functionality
             const downloadDocxBtn = document.getElementById('download-docx-btn');
             
             downloadDocxBtn.addEventListener('click', function() {
-                // In a real implementation, this would call a server endpoint to generate a DOCX file
-                // For now, we'll just show a message
-                toastMessage.textContent = 'DOCX download not implemented in this demo';
+                // Redirect to the download-docx endpoint
+                window.location.href = '{{ url_for("download_docx") }}';
+                
+                // Show toast notification
+                toastMessage.textContent = 'Downloading DOCX file...';
                 toast.classList.add('show');
                 
                 // Hide toast after 3 seconds
