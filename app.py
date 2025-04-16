@@ -186,16 +186,14 @@ def generate_content():
     )
     
     try:
-        # Call Anthropic API
-        response = anthropic.messages.create(
+        # Call Anthropic API - compatible with version 0.7.0
+        response = anthropic.completions.create(
             model=config.CLAUDE_MODEL,
             max_tokens=config.MAX_TOKENS,
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
+            prompt=f"\n\nHuman: {prompt}\n\nAssistant:",
         )
         
-        generated_content = response.content[0].text
+        generated_content = response.completion
         
         # Store the generated content in the session
         session['generated_content'] = generated_content
