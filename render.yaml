@@ -12,7 +12,7 @@ services:
       - key: FLASK_SECRET_KEY
         sync: false
       - key: CLAUDE_MODEL
-        value: claude-3-haiku
+        value: claude-3-sonnet
       - key: FLASK_ENV
         value: production
     domains:
