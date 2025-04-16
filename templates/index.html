@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Writing Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css">
+    <style>
+        :root {
+            --primary-color: #005e30;
+            --secondary-color: #f5f2e9;
+            --accent-color: #00a651;
+            --text-color: #333333;
+        }
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+        }
+        .divider {
+            height: 2px;
+            background-color: var(--primary-color);
+            margin: 2rem 0;
+        }
+        h1, h2, h3, h4 {
+            color: var(--primary-color);
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #004020;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .dropzone {
+            border: 2px dashed var(--primary-color);
+            border-radius: 0.5rem;
+            background-color: #f8f8f8;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .dropzone:hover {
+            background-color: #f0f0f0;
+        }
+        .dropzone .dz-message {
+            text-align: center;
+            margin: 2em 0;
+        }
+        .dropzone .dz-preview {
+            margin: 0.5em;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+            color: white;
+        }
+        .spinner {
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 5px solid white;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-8">
+    <div class="max-w-6xl mx-auto">
+        <div class="divider"></div>
+        <div class="flex justify-between items-center">
+            <h1 class="text-3xl font-bold mb-4 mt-4">Writing Assistant</h1>
+            <a href="/" class="btn-primary font-bold py-2 px-4 rounded">
+                Media Analysis
+            </a>
+        </div>
+        <div class="divider"></div>
+        
+        <div class="card px-8 pt-6 pb-8 mb-4">
+            <h2 class="text-2xl font-bold mb-6">Generate Content with AI</h2>
+            
+            <form id="writing-form" class="space-y-6">
+                <!-- Brief Section -->
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="brief">
+                        Writing Brief
+                    </label>
+                    <textarea id="brief" name="brief" rows="4" 
+                              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                              placeholder="Describe what you want to write about..."></textarea>
+                </div>
+                
+                <!-- Format Selection -->
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="format">
+                        Format
+                    </label>
+                    <select id="format" name="format" 
+                            class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="speech_15min">15-minute Speech (approx. 2,000 words)</option>
+                        <option value="letter_1000">1,000-word Letter</option>
+                        <option value="blog_500">500-word Blog Post</option>
+                        <option value="linkedin">LinkedIn Post</option>
+                        <option value="press_release">Press Release</option>
+                        <option value="exec_summary">Executive Summary</option>
+                        <option value="custom">Custom Format</option>
+                    </select>
+                    
+                    <!-- Custom Word Count (hidden by default) -->
+                    <div id="custom-word-count-container" class="mt-2 hidden">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="custom-word-count">
+                            Custom Word Count
+                        </label>
+                        <input type="number" id="custom-word-count" name="custom_word_count" min="100" max="5000" value="1000"
+                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                </div>
+                
+                <!-- File Upload Sections -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Writing Style Examples -->
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            Writing Style
+                        </label>
+                        <p class="text-sm text-gray-600 mb-2">Upload samples that demonstrate the desired writing style (e.g., CEO's previous communications)</p>
+                        <div id="style-dropzone" class="dropzone"></div>
+                        <div id="style-files" class="mt-2 text-sm"></div>
+                    </div>
+                    
+                    <!-- Past Examples -->
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            Past Examples
+                        </label>
+                        <p class="text-sm text-gray-600 mb-2">Upload previous examples of similar content (e.g., past shareholder letters)</p>
+                        <div id="past-dropzone" class="dropzone"></div>
+                        <div id="past-files" class="mt-2 text-sm"></div>
+                    </div>
+                    
+                    <!-- Competitive Examples -->
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            Competitive Inspiration
+                        </label>
+                        <p class="text-sm text-gray-600 mb-2">Upload examples from competitors or similar organizations for inspiration</p>
+                        <div id="competitive-dropzone" class="dropzone"></div>
+                        <div id="competitive-files" class="mt-2 text-sm"></div>
+                    </div>
+                </div>
+                
+                <!-- File Upload Limits Notice -->
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <p class="text-sm text-blue-800">
+                        <strong>Note:</strong> Maximum 3 files per category. Total upload limit: 10MB. Supported formats: PDF, DOCX, TXT.
+                        Files will be automatically deleted after 7 days.
+                    </p>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="flex items-center justify-between">
+                    <button id="generate-btn" class="btn-primary font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                            type="submit">
+                        Generate Content
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Loading Overlay (Hidden by Default) -->
+        <div id="loading-overlay" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <p class="text-xl">Generating your content...</p>
+            <p class="text-sm mt-2">This may take a minute or two.</p>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+    <script>
+        // Prevent Dropzone from auto-discovering
+        Dropzone.autoDiscover = false;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Dropzones
+            const styleDropzone = new Dropzone("#style-dropzone", {
+                url: "/upload/style",
+                maxFiles: 3,
+                maxFilesize: 10, // MB
+                acceptedFiles: ".pdf,.docx,.doc,.txt",
+                addRemoveLinks: true,
+                dictDefaultMessage: "Drop files here or click to upload<br>(Max 3 files)",
+                init: function() {
+                    this.on("success", updateFileList);
+                    this.on("removedfile", updateFileList);
+                    this.on("error", function(file, errorMessage) {
+                        alert("Error: " + errorMessage);
+                    });
+                }
+            });
+            
+            const pastDropzone = new Dropzone("#past-dropzone", {
+                url: "/upload/past",
+                maxFiles: 3,
+                maxFilesize: 10, // MB
+                acceptedFiles: ".pdf,.docx,.doc,.txt",
+                addRemoveLinks: true,
+                dictDefaultMessage: "Drop files here or click to upload<br>(Max 3 files)",
+                init: function() {
+                    this.on("success", updateFileList);
+                    this.on("removedfile", updateFileList);
+                    this.on("error", function(file, errorMessage) {
+                        alert("Error: " + errorMessage);
+                    });
+                }
+            });
+            
+            const competitiveDropzone = new Dropzone("#competitive-dropzone", {
+                url: "/upload/competitive",
+                maxFiles: 3,
+                maxFilesize: 10, // MB
+                acceptedFiles: ".pdf,.docx,.doc,.txt",
+                addRemoveLinks: true,
+                dictDefaultMessage: "Drop files here or click to upload<br>(Max 3 files)",
+                init: function() {
+                    this.on("success", updateFileList);
+                    this.on("removedfile", updateFileList);
+                    this.on("error", function(file, errorMessage) {
+                        alert("Error: " + errorMessage);
+                    });
+                }
+            });
+            
+            // Load existing files for each category
+            loadExistingFiles('style', styleDropzone);
+            loadExistingFiles('past', pastDropzone);
+            loadExistingFiles('competitive', competitiveDropzone);
+            
+            // Handle format selection change
+            const formatSelect = document.getElementById('format');
+            const customWordCountContainer = document.getElementById('custom-word-count-container');
+            
+            formatSelect.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customWordCountContainer.classList.remove('hidden');
+                } else {
+                    customWordCountContainer.classList.add('hidden');
+                }
+            });
+            
+            // Handle form submission
+            const writingForm = document.getElementById('writing-form');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            
+            writingForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Validate form
+                const brief = document.getElementById('brief').value.trim();
+                if (!brief) {
+                    alert('Please enter a writing brief');
+                    return;
+                }
+                
+                // Show loading overlay
+                loadingOverlay.classList.remove('hidden');
+                
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('brief', brief);
+                formData.append('format', document.getElementById('format').value);
+                
+                // Add custom word count if applicable
+                if (document.getElementById('format').value === 'custom') {
+                    formData.append('custom_word_count', document.getElementById('custom-word-count').value);
+                }
+                
+                // Send request to generate content
+                fetch('/generate', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading overlay
+                    loadingOverlay.classList.add('hidden');
+                    
+                    if (data.success) {
+                        // Redirect to result page
+                        window.location.href = '/result';
+                    } else {
+                        alert('Error: ' + (data.error || 'Failed to generate content'));
+                    }
+                })
+                .catch(error => {
+                    // Hide loading overlay
+                    loadingOverlay.classList.add('hidden');
+                    alert('Error: ' + error.message);
+                });
+            });
+        });
+        
+        // Function to update file list display
+        function updateFileList() {
+            // Update file lists for each category
+            updateCategoryFileList('style');
+            updateCategoryFileList('past');
+            updateCategoryFileList('competitive');
+        }
+        
+        // Function to update file list for a specific category
+        function updateCategoryFileList(category) {
+            fetch(`/files/${category}`)
+                .then(response => response.json())
+                .then(data => {
+                    const fileListElement = document.getElementById(`${category}-files`);
+                    if (data.files && data.files.length > 0) {
+                        const fileItems = data.files.map(file => 
+                            `<div class="flex justify-between items-center py-1">
+                                <span>${file}</span>
+                                <button class="text-red-600 hover:text-red-800" onclick="deleteFile('${category}', '${file}')">
+                                    &times;
+                                </button>
+                            </div>`
+                        ).join('');
+                        fileListElement.innerHTML = fileItems;
+                    } else {
+                        fileListElement.innerHTML = '<p class="text-gray-500">No files uploaded</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error(`Error fetching ${category} files:`, error);
+                });
+        }
+        
+        // Function to load existing files for a category
+        function loadExistingFiles(category, dropzone) {
+            fetch(`/files/${category}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.files && data.files.length > 0) {
+                        data.files.forEach(file => {
+                            // Create a mock file object
+                            const mockFile = { name: file, size: 12345 };
+                            
+                            // Call the addFile method
+                            dropzone.emit("addedfile", mockFile);
+                            dropzone.emit("complete", mockFile);
+                            
+                            // Add the file to the dropzone's files array
+                            dropzone.files.push(mockFile);
+                        });
+                        
+                        // Update the file list display
+                        updateCategoryFileList(category);
+                    }
+                })
+                .catch(error => {
+                    console.error(`Error loading ${category} files:`, error);
+                });
+        }
+        
+        // Function to delete a file
+        function deleteFile(category, filename) {
+            if (confirm(`Are you sure you want to delete ${filename}?`)) {
+                fetch(`/delete/${category}/${filename}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update the file list
+                        updateCategoryFileList(category);
+                        
+                        // Remove the file from the dropzone if it exists
+                        const dropzone = Dropzone.forElement(`#${category}-dropzone`);
+                        const file = dropzone.files.find(f => f.name === filename);
+                        if (file) {
+                            dropzone.removeFile(file);
+                        }
+                    } else {
+                        alert('Error: ' + (data.error || 'Failed to delete file'));
+                    }
+                })
+                .catch(error => {
+                    console.error(`Error deleting file:`, error);
+                    alert('Error: ' + error.message);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
