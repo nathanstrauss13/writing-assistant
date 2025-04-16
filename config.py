@@ -23,7 +23,7 @@ class Config:
     LOG_BACKUP_COUNT = 10
     
     # Claude model settings
-    CLAUDE_MODEL = "claude-3-opus-20240229"
+    CLAUDE_MODEL = "claude-2.0"  # Compatible with Completions API
     MAX_TOKENS = 4000
 
 class DevelopmentConfig(Config):
