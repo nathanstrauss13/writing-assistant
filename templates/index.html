@@ -307,16 +307,37 @@
                     method: 'POST',
                     body: formData
                 })
-                .then(response => response.json())
-                .then(data => {
-                    // Hide loading overlay
-                    loadingOverlay.classList.add('hidden');
-                    
-                    if (data.success) {
-                        // Redirect to result page
-                        window.location.href = '/result';
+                .then(response => {
+                    // Check if the response is JSON
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json().then(data => {
+                            // Hide loading overlay
+                            loadingOverlay.classList.add('hidden');
+                            
+                            if (data.success) {
+                                // Redirect to result page
+                                window.location.href = '/result';
+                            } else {
+                                alert('Error: ' + (data.error || 'Failed to generate content'));
+                            }
+                        });
                     } else {
-                        alert('Error: ' + (data.error || 'Failed to generate content'));
+                        // If not JSON, handle as text
+                        return response.text().then(text => {
+                            // Hide loading overlay
+                            loadingOverlay.classList.add('hidden');
+                            
+                            // Log the error for debugging
+                            console.error('Non-JSON response:', text);
+                            
+                            // Check if it's an HTML error page
+                            if (text.includes('<!DOCTYPE html>')) {
+                                alert('Server error: The server returned an HTML page instead of JSON. Please check the server logs for more details.');
+                            } else {
+                                alert('Error: Unexpected response from server');
+                            }
+                        });
                     }
                 })
                 .catch(error => {

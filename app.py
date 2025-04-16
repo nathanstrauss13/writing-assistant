@@ -191,6 +191,7 @@ def generate_content():
             model=config.CLAUDE_MODEL,
             max_tokens_to_sample=config.MAX_TOKENS,
             prompt=f"\n\nHuman: {prompt}\n\nAssistant:",
+            stop_sequences=["\n\nHuman:"],  # Add stop sequence to prevent model from continuing the conversation
         )
         
         generated_content = response.completion
