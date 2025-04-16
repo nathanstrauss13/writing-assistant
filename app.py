@@ -254,7 +254,6 @@ if __name__ == '__main__':
     app.run(debug=True, port=5001)
 
 # Create required directories at startup
-@app.before_first_request
 def create_directories():
     """Create all required directories at startup"""
     # Ensure upload directory exists
@@ -266,3 +265,6 @@ def create_directories():
         os.makedirs(config.LOG_FOLDER)
     
     app.logger.info('Created required directories')
+
+# Call create_directories during initialization
+create_directories()
