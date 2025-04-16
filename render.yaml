@@ -3,7 +3,7 @@ services:
     name: writing-assistant
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: gunicorn app:app --workers=2 --timeout=120
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -13,5 +13,7 @@ services:
         sync: false
       - key: CLAUDE_MODEL
         value: claude-2.0
+      - key: FLASK_ENV
+        value: production
     domains:
       - writing-assistant.innatec3.com
