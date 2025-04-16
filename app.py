@@ -40,18 +40,7 @@ app.logger.setLevel(logging.INFO)
 app.logger.info('Writing Assistant startup')
 
 # Initialize Anthropic client
-try:
-    # Try initializing without proxies
-    anthropic = Anthropic(api_key=config.ANTHROPIC_API_KEY)
-except TypeError as e:
-    if 'proxies' in str(e):
-        # If error is about proxies, initialize with a custom httpx client
-        import httpx
-        http_client = httpx.Client()
-        anthropic = Anthropic(api_key=config.ANTHROPIC_API_KEY, http_client=http_client)
-    else:
-        # Re-raise if it's a different error
-        raise
+anthropic = Anthropic(api_key=config.ANTHROPIC_API_KEY)
 
 # Helper functions
 def allowed_file(filename):
@@ -191,19 +180,24 @@ def generate_content():
         app.logger.info(f"Brief length: {len(brief)} characters")
         app.logger.info(f"Format: {format_type}")
         
-        # Call Anthropic API - compatible with version 0.7.0
+        # Call Anthropic API - updated for version 0.45.2
         try:
-            response = anthropic.completions.create(
+            response = anthropic.messages.create(
                 model=config.CLAUDE_MODEL,
-                max_tokens_to_sample=config.MAX_TOKENS,
-                prompt=f"\n\nHuman: {prompt}\n\nAssistant:",
-                stop_sequences=["\n\nHuman:"],  # Add stop sequence to prevent model from continuing the conversation
+                max_tokens=config.MAX_TOKENS,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
             )
             
             # Log successful API call
             app.logger.info("Anthropic API call successful")
             
-            generated_content = response.completion
+            # Extract content from the response
+            generated_content = response.content[0].text
             
             # Store the generated content in the session
             session['generated_content'] = generated_content
