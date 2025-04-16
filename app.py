@@ -186,26 +186,46 @@ def generate_content():
     )
     
     try:
+        # Log the request parameters
+        app.logger.info(f"Generating content with model: {config.CLAUDE_MODEL}")
+        app.logger.info(f"Brief length: {len(brief)} characters")
+        app.logger.info(f"Format: {format_type}")
+        
         # Call Anthropic API - compatible with version 0.7.0
-        response = anthropic.completions.create(
-            model=config.CLAUDE_MODEL,
-            max_tokens_to_sample=config.MAX_TOKENS,
-            prompt=f"\n\nHuman: {prompt}\n\nAssistant:",
-            stop_sequences=["\n\nHuman:"],  # Add stop sequence to prevent model from continuing the conversation
-        )
-        
-        generated_content = response.completion
-        
-        # Store the generated content in the session
-        session['generated_content'] = generated_content
-        
-        return jsonify({
-            'success': True,
-            'content': generated_content
-        })
+        try:
+            response = anthropic.completions.create(
+                model=config.CLAUDE_MODEL,
+                max_tokens_to_sample=config.MAX_TOKENS,
+                prompt=f"\n\nHuman: {prompt}\n\nAssistant:",
+                stop_sequences=["\n\nHuman:"],  # Add stop sequence to prevent model from continuing the conversation
+            )
+            
+            # Log successful API call
+            app.logger.info("Anthropic API call successful")
+            
+            generated_content = response.completion
+            
+            # Store the generated content in the session
+            session['generated_content'] = generated_content
+            
+            return jsonify({
+                'success': True,
+                'content': generated_content
+            })
+        except Exception as api_error:
+            # Log detailed API error
+            app.logger.error(f"Anthropic API error details: {type(api_error).__name__}: {str(api_error)}")
+            if hasattr(api_error, '__dict__'):
+                app.logger.error(f"API error attributes: {str(api_error.__dict__)}")
+            
+            # Re-raise to be caught by the outer try-except
+            raise
     except Exception as e:
-        app.logger.error(f"Error calling Anthropic API: {str(e)}")
-        return jsonify({'error': f'Error generating content: {str(e)}'}), 500
+        app.logger.error(f"Error generating content: {type(e).__name__}: {str(e)}")
+        # Return a proper JSON response with error details
+        error_response = {'error': f'Error generating content: {str(e)}'}
+        app.logger.info(f"Returning error response: {error_response}")
+        return jsonify(error_response), 500
 
 @app.route('/result')
 def result():
