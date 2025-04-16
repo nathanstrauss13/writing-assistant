@@ -243,9 +243,12 @@ def stats():
     return jsonify(stats)
 
 if __name__ == '__main__':
-    # Ensure upload directory exists
+    # Ensure all required directories exist
     if not os.path.exists(config.UPLOAD_FOLDER):
         os.makedirs(config.UPLOAD_FOLDER)
+    
+    if not os.path.exists(config.LOG_FOLDER):
+        os.makedirs(config.LOG_FOLDER)
     
     # Run the app
     app.run(debug=True, port=5001)
