@@ -40,7 +40,18 @@ app.logger.setLevel(logging.INFO)
 app.logger.info('Writing Assistant startup')
 
 # Initialize Anthropic client
-anthropic = Anthropic(api_key=config.ANTHROPIC_API_KEY)
+try:
+    # Try initializing without proxies
+    anthropic = Anthropic(api_key=config.ANTHROPIC_API_KEY)
+except TypeError as e:
+    if 'proxies' in str(e):
+        # If error is about proxies, initialize with a custom httpx client
+        import httpx
+        http_client = httpx.Client()
+        anthropic = Anthropic(api_key=config.ANTHROPIC_API_KEY, http_client=http_client)
+    else:
+        # Re-raise if it's a different error
+        raise
 
 # Helper functions
 def allowed_file(filename):
