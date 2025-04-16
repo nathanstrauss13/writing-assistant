@@ -180,18 +180,19 @@ def generate_content():
         app.logger.info(f"Brief length: {len(brief)} characters")
         app.logger.info(f"Format: {format_type}")
         
-        # Call Anthropic API using the older API style
+        # Call Anthropic API using the older API style compatible with anthropic==0.5.0
         try:
-            response = anthropic.completions.create(
+            response = anthropic.completion(
                 model=config.CLAUDE_MODEL,
+                prompt=f"{anthropic.HUMAN_PROMPT} {prompt}{anthropic.AI_PROMPT}",
                 max_tokens_to_sample=config.MAX_TOKENS,
-                prompt=f"\n\nHuman: {prompt}\n\nAssistant:",
+                stop_sequences=[anthropic.HUMAN_PROMPT],
             )
             
             # Log successful API call
             app.logger.info("Anthropic API call successful")
             
-            generated_content = response.completion
+            generated_content = response["completion"]
             
             # Store the generated content in the session
             session['generated_content'] = generated_content
