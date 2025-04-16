@@ -22,8 +22,8 @@ FORMAT_DETAILS = {
     },
     'linkedin': {
         'description': 'LinkedIn post',
-        'word_count': 300,
-        'characteristics': 'professional, concise, with a hook and call-to-action'
+        'word_count': 1300,
+        'characteristics': 'professional, concise, with a hook and call-to-action (1,300 to 2,000 characters)'
     },
     'press_release': {
         'description': 'Press release',
@@ -86,7 +86,15 @@ def construct_prompt(brief, format_type, style_text=None, past_text=None, compet
     format_info = get_format_details(format_type, custom_word_count)
     
     # Construct the prompt
-    prompt = f"""You are an expert communications professional tasked with writing a {format_info['description']} (approximately {format_info['word_count']} words) that is {format_info['characteristics']}.
+    if format_type == 'linkedin':
+        prompt = f"""You are an expert communications professional tasked with writing a {format_info['description']} (approximately {format_info['word_count']} characters) that is {format_info['characteristics']}.
+
+BRIEF:
+{brief}
+
+"""
+    else:
+        prompt = f"""You are an expert communications professional tasked with writing a {format_info['description']} (approximately {format_info['word_count']} words) that is {format_info['characteristics']}.
 
 BRIEF:
 {brief}
@@ -124,7 +132,14 @@ The following are examples from competitors or similar organizations. Draw inspi
 """
     
     # Final instructions
-    prompt += f"""
+    if format_type == 'linkedin':
+        prompt += f"""
+Please write a {format_info['description']} based on the brief provided, incorporating the style from the examples and drawing inspiration from the competitive examples. The content should be approximately {format_info['word_count']} characters and should be {format_info['characteristics']}.
+
+Format your response as a complete, ready-to-use document without explanations or meta-commentary.
+"""
+    else:
+        prompt += f"""
 Please write a {format_info['description']} based on the brief provided, incorporating the style from the examples and drawing inspiration from the competitive examples. The content should be approximately {format_info['word_count']} words and should be {format_info['characteristics']}.
 
 Format your response as a complete, ready-to-use document without explanations or meta-commentary.
