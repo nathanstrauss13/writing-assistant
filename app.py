@@ -189,7 +189,7 @@ def generate_content():
         # Call Anthropic API - compatible with version 0.7.0
         response = anthropic.completions.create(
             model=config.CLAUDE_MODEL,
-            max_tokens=config.MAX_TOKENS,
+            max_tokens_to_sample=config.MAX_TOKENS,
             prompt=f"\n\nHuman: {prompt}\n\nAssistant:",
         )
         
