@@ -2,6 +2,7 @@ services:
   - type: web
     name: writing-assistant
     env: python
+    runtime: python3.11.0
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
     envVars:
