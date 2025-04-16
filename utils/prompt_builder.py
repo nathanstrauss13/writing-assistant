@@ -101,11 +101,11 @@ BRIEF:
 
 """
     
-    # Add writing style examples if available
+    # Add source material if available
     if style_text:
         prompt += f"""
-WRITING STYLE EXAMPLES:
-The following examples demonstrate the desired writing style and tone. Please emulate this style in your response:
+SOURCE MATERIAL:
+The following material provides the substance of the content - relevant data and information that should be included in your response:
 
 {style_text}
 
@@ -115,7 +115,7 @@ The following examples demonstrate the desired writing style and tone. Please em
     if past_text:
         prompt += f"""
 PAST EXAMPLES:
-The following are examples of similar content from the past. Use these for reference on structure and approach:
+The following examples demonstrate the desired writing style, tone, format, and flow. Please emulate this style in your response:
 
 {past_text}
 
@@ -134,13 +134,13 @@ The following are examples from competitors or similar organizations. Draw inspi
     # Final instructions
     if format_type == 'linkedin':
         prompt += f"""
-Please write a {format_info['description']} based on the brief provided, incorporating the style from the examples and drawing inspiration from the competitive examples. The content should be approximately {format_info['word_count']} characters and should be {format_info['characteristics']}.
+Please write a {format_info['description']} based on the brief provided, using the substance from the source material, emulating the writing style from the past examples, and drawing inspiration from the competitive examples. The content should be approximately {format_info['word_count']} characters and should be {format_info['characteristics']}.
 
 Format your response as a complete, ready-to-use document without explanations or meta-commentary.
 """
     else:
         prompt += f"""
-Please write a {format_info['description']} based on the brief provided, incorporating the style from the examples and drawing inspiration from the competitive examples. The content should be approximately {format_info['word_count']} words and should be {format_info['characteristics']}.
+Please write a {format_info['description']} based on the brief provided, using the substance from the source material, emulating the writing style from the past examples, and drawing inspiration from the competitive examples. The content should be approximately {format_info['word_count']} words and should be {format_info['characteristics']}.
 
 Format your response as a complete, ready-to-use document without explanations or meta-commentary.
 """
@@ -259,7 +259,7 @@ def optimize_prompt_for_token_limits(brief, format_type, style_text=None, past_t
     
     # Truncate texts if necessary
     optimized_brief = brief
-    optimized_style_text = truncate_text_to_fit(style_text, style_tokens, "writing style examples") if style_text else None
+    optimized_style_text = truncate_text_to_fit(style_text, style_tokens, "source material") if style_text else None
     optimized_past_text = truncate_text_to_fit(past_text, past_tokens, "past examples") if past_text else None
     optimized_competitive_text = truncate_text_to_fit(competitive_text, competitive_tokens, "competitive examples") if competitive_text else None
     
