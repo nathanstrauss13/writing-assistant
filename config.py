@@ -21,6 +21,17 @@ class Config:
     LOG_FILE = os.path.join(LOG_FOLDER, 'writing_assistant.log')
     LOG_MAX_BYTES = 10240
     LOG_BACKUP_COUNT = 10
+
+    # Lead gating and email settings
+    ENABLE_GATING = True  # toggle soft-gating of premium actions
+    FREE_DOWNLOAD_DOCX = False  # if False, gate DOCX download behind lead form
+
+    # Outbound email (optional; if unset, app will log instead of sending)
+    EMAIL_SENDER = os.environ.get('EMAIL_SENDER')  # e.g., "innate c3 <no-reply@innatec3.com>"
+    SMTP_HOST = os.environ.get('SMTP_HOST')  # e.g., "smtp.sendgrid.net"
+    SMTP_PORT = int(os.environ.get('SMTP_PORT', '587'))
+    SMTP_USER = os.environ.get('SMTP_USER')
+    SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD')
     
     # Claude model settings
     CLAUDE_MODEL = "claude-3-haiku-20240307"  # Updated for Messages API

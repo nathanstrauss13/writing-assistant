@@ -130,12 +130,13 @@ def extract_text_from_docx(file_path):
         logger.error(f"Error extracting text from DOCX: {str(e)}")
         return f"[Error extracting text from DOCX: {str(e)}]"
 
-def extract_text_from_folder(folder_path):
+def extract_text_from_folder(folder_path, max_chars=None):
     """
     Extract text from all supported files in a folder
     
     Args:
         folder_path (str): Path to the folder containing files
+        max_chars (int, optional): Maximum number of characters to extract
         
     Returns:
         str: Concatenated text from all files
@@ -145,6 +146,7 @@ def extract_text_from_folder(folder_path):
         return ""
     
     all_text = []
+    total_chars = 0
     
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
@@ -155,11 +157,30 @@ def extract_text_from_folder(folder_path):
         
         # Extract text from the file
         file_text = extract_text_from_file(file_path)
+        file_size = len(file_text)
+        
+        logger.info(f"Extracted {file_size} characters from {filename}")
         
         # Add a header with the filename
-        all_text.append(f"--- From {filename} ---\n{file_text}")
+        formatted_text = f"--- From {filename} ---\n{file_text}"
+        all_text.append(formatted_text)
+        
+        total_chars += len(formatted_text)
+        
+        # Check if we've exceeded the maximum size
+        if max_chars and total_chars > max_chars:
+            logger.warning(f"Truncating extracted text at {max_chars} characters (current: {total_chars})")
+            break
     
-    return "\n\n".join(all_text)
+    combined_text = "\n\n".join(all_text)
+    
+    # Truncate if necessary
+    if max_chars and len(combined_text) > max_chars:
+        logger.warning(f"Truncating final combined text from {len(combined_text)} to {max_chars} characters")
+        combined_text = combined_text[:max_chars] + "\n\n[Text truncated due to size limits]"
+    
+    logger.info(f"Total extracted text size: {len(combined_text)} characters from {len(all_text)} files")
+    return combined_text
 
 def get_file_size(file_path):
     """Get the size of a file in bytes"""

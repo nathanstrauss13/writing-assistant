@@ -42,6 +42,49 @@ FORMAT_DETAILS = {
     }
 }
 
+def map_tone(formality_level=None, confidence_level=None, region=None, persona=None, industry=None):
+    """
+    Build a concise tone/persona directive string based on numeric sliders and selections.
+    formality_level and confidence_level are expected as strings '1'-'5'.
+    """
+    pieces = []
+    try:
+        f = int(formality_level) if formality_level is not None and formality_level != '' else None
+        c = int(confidence_level) if confidence_level is not None and confidence_level != '' else None
+    except ValueError:
+        f = None
+        c = None
+
+    if f is not None:
+        if f <= 2:
+            pieces.append("conversational and approachable")
+        elif f == 3:
+            pieces.append("balanced professional tone")
+        else:
+            pieces.append("formal and polished")
+
+    if c is not None:
+        if c <= 2:
+            pieces.append("humble and cautious (avoid overclaiming)")
+        elif c == 3:
+            pieces.append("confident but measured")
+        else:
+            pieces.append("authoritative and decisive")
+
+    if region:
+        if region.lower() in ("uk", "gb", "british"):
+            pieces.append("use British English spellings")
+        elif region.lower() in ("us", "usa", "american"):
+            pieces.append("use American English spellings")
+
+    if persona:
+        pieces.append(f"write for the '{persona}' persona")
+
+    if industry:
+        pieces.append(f"reflect familiarity with the {industry} industry")
+
+    return ", ".join(pieces) if pieces else ""
+
 def get_format_details(format_type, custom_word_count=None):
     """
     Get the details for a specific format type
@@ -67,7 +110,23 @@ def get_format_details(format_type, custom_word_count=None):
     
     return format_info
 
-def construct_prompt(brief, format_type, style_text=None, past_text=None, competitive_text=None, custom_word_count=None):
+def construct_prompt(
+    brief,
+    format_type,
+    style_text=None,
+    past_text=None,
+    competitive_text=None,
+    custom_word_count=None,
+    audience=None,
+    objective=None,
+    key_messages=None,
+    constraints=None,
+    tone_formality=None,
+    tone_confidence=None,
+    region=None,
+    industry=None,
+    persona=None
+):
     """
     Construct a prompt for Claude based on the user inputs and uploaded files
     
@@ -78,6 +137,15 @@ def construct_prompt(brief, format_type, style_text=None, past_text=None, compet
         past_text (str, optional): Text from past examples
         competitive_text (str, optional): Text from competitive examples
         custom_word_count (int, optional): Custom word count for 'custom' format
+        audience (str, optional): Target audience description
+        objective (str, optional): Objective or call-to-action
+        key_messages (str, optional): Key messages/bullets to include
+        constraints (str, optional): Must-include data/quotes or guardrails
+        tone_formality (str/int, optional): 1-5 scale for formality
+        tone_confidence (str/int, optional): 1-5 scale for confidence/assertiveness
+        region (str, optional): Region/spelling preference (e.g., US/UK)
+        industry (str, optional): Industry context
+        persona (str, optional): Persona preset (e.g., Executive, Journalist)
         
     Returns:
         str: The constructed prompt for Claude
@@ -101,6 +169,29 @@ BRIEF:
 
 """
     
+    # Add structured brief details if provided
+    brief_details = []
+    if audience:
+        brief_details.append(f"- Audience: {audience}")
+    if objective:
+        brief_details.append(f"- Objective/CTA: {objective}")
+    if key_messages:
+        brief_details.append(f"- Key messages: {key_messages}")
+    if constraints:
+        brief_details.append(f"- Constraints or must-include items: {constraints}")
+
+    tone_directive = map_tone(tone_formality, tone_confidence, region, persona, industry)
+    if tone_directive:
+        brief_details.append(f"- Tone/persona guidance: {tone_directive}")
+
+    if brief_details:
+        details_text = "\n".join(brief_details)
+        prompt += f"""
+BRIEF DETAILS:
+{details_text}
+
+"""
+
     # Add source material if available
     if style_text:
         prompt += f"""
@@ -159,8 +250,18 @@ def estimate_token_count(text):
     Returns:
         int: Estimated token count
     """
+    if not text:
+        return 0
+        
     # A very rough approximation: 1 token ≈ 4 characters for English text
-    return len(text) // 4
+    # This is a simple heuristic - in production, consider using a proper tokenizer
+    estimated_tokens = len(text) // 4
+    
+    # Log token estimates for large texts
+    if len(text) > 10000:
+        logger.info(f"Estimated {estimated_tokens} tokens for text of {len(text)} characters")
+        
+    return estimated_tokens
 
 def truncate_text_to_fit(text, max_tokens, section_name):
     """
@@ -174,9 +275,13 @@ def truncate_text_to_fit(text, max_tokens, section_name):
     Returns:
         str: Truncated text
     """
+    if not text:
+        return ""
+        
     estimated_tokens = estimate_token_count(text)
     
     if estimated_tokens <= max_tokens:
+        logger.info(f"{section_name} fits within token limits: {estimated_tokens}/{max_tokens} tokens")
         return text
     
     # Simple truncation strategy - keep the beginning and add a note
@@ -185,14 +290,16 @@ def truncate_text_to_fit(text, max_tokens, section_name):
     truncated_text = text[:chars_to_keep]
     
     # Add a note about truncation
-    truncation_note = f"\n\n[Note: The {section_name} content was truncated to fit within token limits.]"
+    truncation_note = f"\n\n[Note: The {section_name} content was truncated from {estimated_tokens} to {max_tokens} tokens to fit within limits.]"
     
-    logger.warning(f"Truncated {section_name} from {estimated_tokens} to {max_tokens} tokens")
+    logger.warning(f"Truncated {section_name} from {estimated_tokens} to {max_tokens} tokens ({len(text)} to {chars_to_keep} characters)")
     
     return truncated_text + truncation_note
 
-def optimize_prompt_for_token_limits(brief, format_type, style_text=None, past_text=None, competitive_text=None, 
-                                    custom_word_count=None, max_total_tokens=8000):
+def optimize_prompt_for_token_limits(brief, format_type, style_text=None, past_text=None, competitive_text=None,
+                                    custom_word_count=None, max_total_tokens=8000,
+                                    audience=None, objective=None, key_messages=None, constraints=None,
+                                    tone_formality=None, tone_confidence=None, region=None, industry=None, persona=None):
     """
     Optimize the prompt to fit within token limits by allocating tokens to different sections
     
@@ -208,14 +315,22 @@ def optimize_prompt_for_token_limits(brief, format_type, style_text=None, past_t
     Returns:
         str: The optimized prompt
     """
+    # Log initial sizes
+    logger.info(f"Optimizing prompt for token limits (max: {max_total_tokens})")
+    logger.info(f"Initial sizes - Brief: {len(brief)} chars, Style: {len(style_text or '')} chars, " +
+                f"Past: {len(past_text or '')} chars, Competitive: {len(competitive_text or '')} chars")
+    
     # Reserve tokens for the prompt structure and instructions
     structure_tokens = 500
+    logger.info(f"Reserved {structure_tokens} tokens for prompt structure")
     
     # Reserve tokens for the brief (highest priority)
     brief_tokens = min(estimate_token_count(brief), 1500)
+    logger.info(f"Reserved {brief_tokens} tokens for brief (out of max 1500)")
     
     # Calculate remaining tokens for examples
     remaining_tokens = max_total_tokens - structure_tokens - brief_tokens
+    logger.info(f"Remaining tokens for examples: {remaining_tokens}")
     
     # If we have all three types of examples, allocate tokens proportionally
     if style_text and past_text and competitive_text:
@@ -270,5 +385,14 @@ def optimize_prompt_for_token_limits(brief, format_type, style_text=None, past_t
         optimized_style_text, 
         optimized_past_text, 
         optimized_competitive_text, 
-        custom_word_count
+        custom_word_count,
+        audience=audience,
+        objective=objective,
+        key_messages=key_messages,
+        constraints=constraints,
+        tone_formality=tone_formality,
+        tone_confidence=tone_confidence,
+        region=region,
+        industry=industry,
+        persona=persona
     )

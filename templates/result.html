@@ -111,6 +111,14 @@
                     </svg>
                     Download as DOCX
                 </button>
+
+                <button id="email-btn" class="btn-secondary font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M2.94 6.34A2 2 0 014 6h12a2 2 0 011.06.34L10 11 2.94 6.34z" />
+                        <path d="M18 8.12l-8 5-8-5V14a2 2 0 002 2h12a2 2 0 002-2V8.12z" />
+                    </svg>
+                    Send to my inbox
+                </button>
                 
                 <button id="regenerate-btn" class="btn-secondary font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -121,9 +129,9 @@
             </div>
             
             <!-- Content Area -->
-            <div class="border rounded p-6 bg-gray-50 content-area" id="content-area">
-                {{ content|safe }}
-            </div>
+            <pre class="border rounded p-6 bg-gray-50 content-area" id="content-area">
+                {{ content }}
+            </pre>
         </div>
     </div>
     
@@ -184,18 +192,14 @@
             // Download as DOCX functionality
             const downloadDocxBtn = document.getElementById('download-docx-btn');
             
-            downloadDocxBtn.addEventListener('click', function() {
-                // Redirect to the download-docx endpoint
-                window.location.href = '{{ url_for("download_docx") }}';
-                
-                // Show toast notification
-                toastMessage.textContent = 'Downloading DOCX file...';
-                toast.classList.add('show');
-                
-                // Hide toast after 3 seconds
-                setTimeout(function() {
-                    toast.classList.remove('show');
-                }, 3000);
+            downloadDocxBtn.addEventListener('click', async function() {
+                await handleDocxDownload();
+            });
+
+            // Send to my inbox functionality
+            const emailBtn = document.getElementById('email-btn');
+            emailBtn.addEventListener('click', async function() {
+                openLeadModal('email_result');
             });
             
             // Regenerate content functionality
@@ -205,6 +209,94 @@
                 window.location.href = '/';
             });
         });
+
+        // Lead gating helpers
+        async function getLeadStatus() {
+            try {
+                const res = await fetch('/lead-status');
+                return await res.json();
+            } catch (e) {
+                console.error('Failed to fetch lead status', e);
+                return { enable_gating: false, free_docx: true, lead_captured: false };
+            }
+        }
+
+        async function handleDocxDownload() {
+            const status = await getLeadStatus();
+            if (status.enable_gating && !status.free_docx && !status.lead_captured) {
+                openLeadModal('docx_download');
+                return;
+            }
+            // Proceed with download
+            window.location.href = '{{ url_for("download_docx") }}';
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.textContent = 'Downloading DOCX file...';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Lead modal open/close and submit
+        function openLeadModal(action) {
+            const modal = document.getElementById('lead-modal');
+            document.getElementById('lead-action').value = action;
+            modal.classList.remove('hidden');
+
+            const cancelBtn = document.getElementById('lead-cancel-btn');
+            cancelBtn.onclick = () => closeLeadModal();
+
+            const form = document.getElementById('lead-form');
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                // Also include 'action' explicitly
+                formData.append('action', document.getElementById('lead-action').value);
+                try {
+                    const res = await fetch('/lead', { method: 'POST', body: formData });
+                    const data = await res.json();
+                    if (!res.ok || !data.success) {
+                        alert('Error: ' + (data.error || 'Failed to submit'));
+                        return;
+                    }
+                    closeLeadModal();
+
+                    const actionVal = document.getElementById('lead-action').value;
+                    const email = document.getElementById('lead-email').value;
+                    const name = document.getElementById('lead-name').value;
+
+                    if (actionVal === 'docx_download') {
+                        await handleDocxDownload(); // will now pass gating
+                    } else if (actionVal === 'email_result') {
+                        try {
+                            const resp = await fetch('/email-result', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ email, name })
+                            });
+                            const d = await resp.json();
+                            if (resp.ok && d.success) {
+                                const toast = document.getElementById('toast');
+                                const toastMessage = document.getElementById('toast-message');
+                                toastMessage.textContent = 'Emailed to you!';
+                                toast.classList.add('show');
+                                setTimeout(() => toast.classList.remove('show'), 3000);
+                            } else {
+                                alert('Error: ' + (d.error || 'Failed to email result'));
+                            }
+                        } catch (err) {
+                            alert('Error: ' + err.message);
+                        }
+                    }
+                } catch (err) {
+                    alert('Error: ' + err.message);
+                }
+            };
+        }
+
+        function closeLeadModal() {
+            const modal = document.getElementById('lead-modal');
+            modal.classList.add('hidden');
+        }
     </script>
     
     <!-- Footer -->
@@ -213,6 +305,38 @@
         <p class="text-sm text-gray-600">
             for more information about innate c3, visit <a href="https://innatec3.com" target="_blank" class="text-primary-600 hover:underline" style="color: var(--primary-color);">innatec3.com</a>
         </p>
+    </div>
+    <!-- Lead capture modal -->
+    <div id="lead-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold mb-2" style="color: var(--primary-color);">Almost there</h3>
+            <p class="text-sm text-gray-600 mb-4">Enter your details to continue. We’ll also send a copy to your inbox.</p>
+            <form id="lead-form">
+                <input type="hidden" id="lead-action" name="action" value="">
+                <div class="mb-3">
+                    <label class="block text-gray-700 text-sm font-bold mb-1" for="lead-name">Name</label>
+                    <input id="lead-name" name="name" type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Your name" />
+                </div>
+                <div class="mb-3">
+                    <label class="block text-gray-700 text-sm font-bold mb-1" for="lead-email">Work Email</label>
+                    <input id="lead-email" name="email" type="email" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="you@company.com" />
+                </div>
+                <div class="mb-3">
+                    <label class="block text-gray-700 text-sm font-bold mb-1" for="lead-company">Company</label>
+                    <input id="lead-company" name="company" type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Company" />
+                </div>
+                <div class="mb-4">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="consent" class="form-checkbox mr-2">
+                        <span class="text-sm text-gray-600">I’d like occasional updates about communications tools and services.</span>
+                    </label>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" id="lead-cancel-btn" class="btn-secondary font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Cancel</button>
+                    <button type="submit" class="btn-primary font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Continue</button>
+                </div>
+            </form>
+        </div>
     </div>
 </body>
 </html>

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>innate c3 | writing assistant</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css" />
     <style>
         :root {
             --primary-color: #005e30;
@@ -103,235 +103,248 @@
             </a>
         </div>
         <div class="divider"></div>
-        
+
         <div class="card px-8 pt-6 pb-8 mb-4">
             <h2 class="text-2xl font-bold mb-6">Generate Content with AI</h2>
-            
+
             <form id="writing-form" class="space-y-6">
-                <!-- Brief Section -->
+                <!-- Brief -->
                 <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="brief">
                         Writing Brief
                     </label>
-                    <textarea id="brief" name="brief" rows="4" 
+                    <textarea id="brief" name="brief" rows="4"
                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                              placeholder="Describe what you want to write about..."></textarea>
+                              placeholder="Describe what you want to write about (audience, goal, length hints, key ideas)..."></textarea>
                 </div>
-                
-                <!-- Format Selection -->
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="format">
-                        Format
+
+                <!-- Structured Brief (optional) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="audience">
+                            Audience
+                        </label>
+                        <input id="audience" name="audience" type="text"
+                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                               placeholder="e.g., Institutional investors, tech press, employees, policymakers" />
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="industry">
+                            Industry (context)
+                        </label>
+                        <input id="industry" name="industry" type="text"
+                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                               placeholder="e.g., AI, fintech, retail, healthcare" />
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="objective">
+                            Objective / Call-to-action
+                        </label>
+                        <textarea id="objective" name="objective" rows="2"
+                                  class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                  placeholder="What should this piece achieve? (inform, persuade, recruit, announce, etc.)"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="key-messages">
+                            Key messages / Bullets to include
+                        </label>
+                        <textarea id="key-messages" name="key_messages" rows="2"
+                                  class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                  placeholder="List 3–5 bullets that must be included"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="constraints">
+                            Constraints / Must-include (quotes, data points, disclaimers)
+                        </label>
+                        <textarea id="constraints" name="constraints" rows="2"
+                                  class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                  placeholder="Paste any mandatory language or compliance text"></textarea>
+                    </div>
+                </div>
+
+                <!-- Tone & Persona -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="tone-formality">Formality</label>
+                        <input type="range" min="1" max="5" value="3" id="tone-formality" name="tone_formality" class="w-full" />
+                        <div class="text-xs text-gray-600 flex justify-between">
+                            <span>Conversational</span><span>Formal</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="tone-confidence">Confidence</label>
+                        <input type="range" min="1" max="5" value="3" id="tone-confidence" name="tone_confidence" class="w-full" />
+                        <div class="text-xs text-gray-600 flex justify-between">
+                            <span>Humble</span><span>Authoritative</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="region">Region / Spelling</label>
+                        <select id="region" name="region"
+                                class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="">No preference</option>
+                            <option value="US">US English</option>
+                            <option value="UK">UK English</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="persona">Persona preset</label>
+                        <select id="persona" name="persona"
+                                class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="">None</option>
+                            <option value="Executive">Executive</option>
+                            <option value="Journalist">Journalist</option>
+                            <option value="Investor">Investor</option>
+                            <option value="Employee Communications">Employee Communications</option>
+                            <option value="Policy Maker">Policy Maker</option>
+                            <option value="Developer Relations">Developer Relations</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2 text-sm text-gray-600 flex items-center">
+                        These fields are optional but improve quality and consistency of the output.
+                    </div>
+                </div>
+
+                <!-- Unified Materials upload -->
+                <div class="mt-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Materials (upload any mix of source data, past examples, competitive references)
                     </label>
-                    <select id="format" name="format" 
-                            class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        <option value="speech_15min">15-minute Speech (approx. 2,000 words)</option>
-                        <option value="letter_1000">Executive Letter (approx. 1,000 words)</option>
-                        <option value="blog_500">Blog Post (approx. 500 words)</option>
-                        <option value="linkedin">LinkedIn Post (approx. 1,300-2,000 characters)</option>
-                        <option value="press_release">Press Release (approx. 800 words)</option>
-                        <option value="exec_summary">Executive Summary (approx. 500 words)</option>
-                        <option value="custom">Custom Format</option>
-                    </select>
-                    
-                    <!-- Custom Word Count (hidden by default) -->
-                    <div id="custom-word-count-container" class="mt-2 hidden">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="custom-word-count">
-                            Custom Word Count
+                    <p class="text-sm text-gray-600 mb-2">
+                        Add anything helpful: outlines, data/briefs, prior work samples, or references (PDF, DOCX, TXT).
+                    </p>
+                    <div id="materials-dropzone" class="dropzone"></div>
+                    <div id="materials-files" class="mt-2 text-sm"></div>
+
+                    <div class="mt-3">
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="materials-paste">
+                            Or paste materials
                         </label>
-                        <input type="number" id="custom-word-count" name="custom_word_count" min="100" max="5000" value="1000"
-                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <textarea id="materials-paste" name="materials_paste" rows="4"
+                                  class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                  placeholder="Paste source notes, examples, or reference content to include"></textarea>
                     </div>
                 </div>
-                
-                <!-- File Upload Sections -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Source Material -->
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2">
-                            Source Material
-                        </label>
-                        <p class="text-sm text-gray-600 mb-2">Upload the substance of the desired content such as an outline, relevant data and information</p>
-                        <div id="style-dropzone" class="dropzone"></div>
-                        <div id="style-files" class="mt-2 text-sm"></div>
-                    </div>
-                    
-                    <!-- Past Examples -->
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2">
-                            Past Examples
-                        </label>
-                        <p class="text-sm text-gray-600 mb-2">Upload examples of similar content demonstrating the desired tone and writing style</p>
-                        <div id="past-dropzone" class="dropzone"></div>
-                        <div id="past-files" class="mt-2 text-sm"></div>
-                    </div>
-                    
-                    <!-- Competitive Examples -->
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2">
-                            Competitive Inspiration
-                        </label>
-                        <p class="text-sm text-gray-600 mb-2">Upload examples from competitors or similar organizations to model</p>
-                        <div id="competitive-dropzone" class="dropzone"></div>
-                        <div id="competitive-files" class="mt-2 text-sm"></div>
-                    </div>
-                </div>
-                
+
                 <!-- File Upload Limits Notice -->
                 <div class="bg-blue-50 p-4 rounded-lg">
                     <p class="text-sm text-blue-800">
-                        <strong>Note:</strong> Maximum 3 files per category. Total upload limit: 10MB. Supported formats: PDF, DOCX, TXT.
-                        Files will be automatically deleted after 7 days.
+                        <strong>Note:</strong> Maximum 3 files total. Upload limit: 10MB. Supported formats: PDF, DOCX, TXT.
+                        Files are automatically deleted after 7 days.
                     </p>
                 </div>
-                
-                <!-- Submit Button -->
+
+                <!-- Submit -->
                 <div class="flex items-center justify-between">
-                    <button id="generate-btn" class="btn-primary font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                            type="submit">
+                    <button id="generate-btn" class="btn-primary font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
                         Generate Content
                     </button>
                 </div>
             </form>
         </div>
-        
-        <!-- Loading Overlay (Hidden by Default) -->
+
+        <!-- Loading Overlay -->
         <div id="loading-overlay" class="loading-overlay hidden">
             <div class="spinner"></div>
             <p class="text-xl">Generating your content...</p>
             <p class="text-sm mt-2">This may take a minute or two.</p>
         </div>
     </div>
-    
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
     <script>
         // Prevent Dropzone from auto-discovering
         Dropzone.autoDiscover = false;
-        
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize Dropzones
-            const styleDropzone = new Dropzone("#style-dropzone", {
-                url: "/upload/style",
+            // Initialize single "materials" dropzone
+            const materialsDropzone = new Dropzone("#materials-dropzone", {
+                url: "/upload/materials",
                 maxFiles: 3,
                 maxFilesize: 10, // MB
                 acceptedFiles: ".pdf,.docx,.doc,.txt",
                 addRemoveLinks: true,
                 dictDefaultMessage: "Drop files here or click to upload<br>(Max 3 files)",
                 init: function() {
-                    this.on("success", updateFileList);
-                    this.on("removedfile", updateFileList);
+                    this.on("success", function(file, response) {
+                        updateCategoryFileList('materials');
+                    });
+                    this.on("removedfile", function(file) {
+                        updateCategoryFileList('materials');
+                    });
                     this.on("error", function(file, errorMessage) {
                         alert("Error: " + errorMessage);
                     });
                 }
             });
-            
-            const pastDropzone = new Dropzone("#past-dropzone", {
-                url: "/upload/past",
-                maxFiles: 3,
-                maxFilesize: 10, // MB
-                acceptedFiles: ".pdf,.docx,.doc,.txt",
-                addRemoveLinks: true,
-                dictDefaultMessage: "Drop files here or click to upload<br>(Max 3 files)",
-                init: function() {
-                    this.on("success", updateFileList);
-                    this.on("removedfile", updateFileList);
-                    this.on("error", function(file, errorMessage) {
-                        alert("Error: " + errorMessage);
-                    });
-                }
-            });
-            
-            const competitiveDropzone = new Dropzone("#competitive-dropzone", {
-                url: "/upload/competitive",
-                maxFiles: 3,
-                maxFilesize: 10, // MB
-                acceptedFiles: ".pdf,.docx,.doc,.txt",
-                addRemoveLinks: true,
-                dictDefaultMessage: "Drop files here or click to upload<br>(Max 3 files)",
-                init: function() {
-                    this.on("success", updateFileList);
-                    this.on("removedfile", updateFileList);
-                    this.on("error", function(file, errorMessage) {
-                        alert("Error: " + errorMessage);
-                    });
-                }
-            });
-            
-            // Load existing files for each category
-            loadExistingFiles('style', styleDropzone);
-            loadExistingFiles('past', pastDropzone);
-            loadExistingFiles('competitive', competitiveDropzone);
-            
-            // Handle format selection change
-            const formatSelect = document.getElementById('format');
-            const customWordCountContainer = document.getElementById('custom-word-count-container');
-            
-            formatSelect.addEventListener('change', function() {
-                if (this.value === 'custom') {
-                    customWordCountContainer.classList.remove('hidden');
-                } else {
-                    customWordCountContainer.classList.add('hidden');
-                }
-            });
-            
+
+            // Load existing materials
+            loadExistingFiles('materials', materialsDropzone);
+
             // Handle form submission
             const writingForm = document.getElementById('writing-form');
             const loadingOverlay = document.getElementById('loading-overlay');
-            
+
             writingForm.addEventListener('submit', function(e) {
                 e.preventDefault();
-                
-                // Validate form
+
                 const brief = document.getElementById('brief').value.trim();
                 if (!brief) {
                     alert('Please enter a writing brief');
                     return;
                 }
-                
-                // Show loading overlay
+
                 loadingOverlay.classList.remove('hidden');
-                
-                // Prepare form data
+
                 const formData = new FormData();
                 formData.append('brief', brief);
-                formData.append('format', document.getElementById('format').value);
-                
-                // Add custom word count if applicable
-                if (document.getElementById('format').value === 'custom') {
-                    formData.append('custom_word_count', document.getElementById('custom-word-count').value);
-                }
-                
+
+                // Structured brief fields
+                const audienceEl = document.getElementById('audience');
+                const objectiveEl = document.getElementById('objective');
+                const keyMessagesEl = document.getElementById('key-messages');
+                const constraintsEl = document.getElementById('constraints');
+                const toneFormalityEl = document.getElementById('tone-formality');
+                const toneConfidenceEl = document.getElementById('tone-confidence');
+                const regionEl = document.getElementById('region');
+                const industryEl = document.getElementById('industry');
+                const personaEl = document.getElementById('persona');
+
+                if (audienceEl) formData.append('audience', audienceEl.value.trim());
+                if (objectiveEl) formData.append('objective', objectiveEl.value.trim());
+                if (keyMessagesEl) formData.append('key_messages', keyMessagesEl.value.trim());
+                if (constraintsEl) formData.append('constraints', constraintsEl.value.trim());
+                if (toneFormalityEl) formData.append('tone_formality', toneFormalityEl.value);
+                if (toneConfidenceEl) formData.append('tone_confidence', toneConfidenceEl.value);
+                if (regionEl) formData.append('region', regionEl.value);
+                if (industryEl) formData.append('industry', industryEl.value.trim());
+                if (personaEl) formData.append('persona', personaEl.value);
+
+                // Paste area
+                const materialsPasteEl = document.getElementById('materials-paste');
+                if (materialsPasteEl) formData.append('materials_paste', materialsPasteEl.value);
+
                 // Send request to generate content
                 fetch('/generate', {
                     method: 'POST',
                     body: formData
                 })
                 .then(response => {
-                    // Check if the response is JSON
                     const contentType = response.headers.get('content-type');
                     if (contentType && contentType.includes('application/json')) {
                         return response.json().then(data => {
-                            // Hide loading overlay
                             loadingOverlay.classList.add('hidden');
-                            
+
                             if (data.success) {
-                                // Redirect to result page
                                 window.location.href = '/result';
                             } else {
                                 alert('Error: ' + (data.error || 'Failed to generate content'));
                             }
                         });
                     } else {
-                        // If not JSON, handle as text
                         return response.text().then(text => {
-                            // Hide loading overlay
                             loadingOverlay.classList.add('hidden');
-                            
-                            // Log the error for debugging
                             console.error('Non-JSON response:', text);
-                            
-                            // Check if it's an HTML error page
                             if (text.includes('<!DOCTYPE html>')) {
                                 alert('Server error: The server returned an HTML page instead of JSON. Please check the server logs for more details.');
                             } else {
@@ -341,65 +354,50 @@
                     }
                 })
                 .catch(error => {
-                    // Hide loading overlay
                     loadingOverlay.classList.add('hidden');
                     alert('Error: ' + error.message);
                 });
             });
         });
-        
-        // Function to update file list display
-        function updateFileList() {
-            // Update file lists for each category
-            updateCategoryFileList('style');
-            updateCategoryFileList('past');
-            updateCategoryFileList('competitive');
-        }
-        
-        // Function to update file list for a specific category
+
+        // File list helpers
         function updateCategoryFileList(category) {
             fetch(`/files/${category}`)
                 .then(response => response.json())
                 .then(data => {
                     const fileListElement = document.getElementById(`${category}-files`);
-                    if (data.files && data.files.length > 0) {
-                        const fileItems = data.files.map(file => 
-                            `<div class="flex justify-between items-center py-1">
-                                <span>${file}</span>
-                                <button class="text-red-600 hover:text-red-800" onclick="deleteFile('${category}', '${file}')">
-                                    &times;
-                                </button>
-                            </div>`
-                        ).join('');
-                        fileListElement.innerHTML = fileItems;
-                    } else {
-                        fileListElement.innerHTML = '<p class="text-gray-500">No files uploaded</p>';
+                    if (fileListElement) {
+                        if (data.files && data.files.length > 0) {
+                            const fileItems = data.files.map(file =>
+                                `<div class="flex justify-between items-center py-1">
+                                    <span>${file}</span>
+                                    <button class="text-red-600 hover:text-red-800" onclick="deleteFile('${category}', '${file}')">
+                                        &times;
+                                    </button>
+                                </div>`
+                            ).join('');
+                            fileListElement.innerHTML = fileItems;
+                        } else {
+                            fileListElement.innerHTML = '<p class="text-gray-500">No files uploaded</p>';
+                        }
                     }
                 })
                 .catch(error => {
                     console.error(`Error fetching ${category} files:`, error);
                 });
         }
-        
-        // Function to load existing files for a category
+
         function loadExistingFiles(category, dropzone) {
             fetch(`/files/${category}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.files && data.files.length > 0) {
                         data.files.forEach(file => {
-                            // Create a mock file object
                             const mockFile = { name: file, size: 12345 };
-                            
-                            // Call the addFile method
                             dropzone.emit("addedfile", mockFile);
                             dropzone.emit("complete", mockFile);
-                            
-                            // Add the file to the dropzone's files array
                             dropzone.files.push(mockFile);
                         });
-                        
-                        // Update the file list display
                         updateCategoryFileList(category);
                     }
                 })
@@ -407,25 +405,25 @@
                     console.error(`Error loading ${category} files:`, error);
                 });
         }
-        
-        // Function to delete a file
+
         function deleteFile(category, filename) {
             if (confirm(`Are you sure you want to delete ${filename}?`)) {
-                fetch(`/delete/${category}/${filename}`, {
-                    method: 'DELETE'
-                })
+                fetch(`/delete/${category}/${filename}`, { method: 'DELETE' })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Update the file list
-                        updateCategoryFileList(category);
-                        
-                        // Remove the file from the dropzone if it exists
                         const dropzone = Dropzone.forElement(`#${category}-dropzone`);
-                        const file = dropzone.files.find(f => f.name === filename);
-                        if (file) {
-                            dropzone.removeFile(file);
+                        if (dropzone) {
+                            const fileIndex = dropzone.files.findIndex(f => f.name === filename);
+                            if (fileIndex !== -1) {
+                                const file = dropzone.files[fileIndex];
+                                dropzone.files.splice(fileIndex, 1);
+                                if (file.previewElement) {
+                                    file.previewElement.parentNode.removeChild(file.previewElement);
+                                }
+                            }
                         }
+                        updateCategoryFileList(category);
                     } else {
                         alert('Error: ' + (data.error || 'Failed to delete file'));
                     }
@@ -437,12 +435,15 @@
             }
         }
     </script>
-    
+
     <!-- Footer -->
     <div class="max-w-6xl mx-auto mt-12 mb-4 text-center">
         <div class="divider"></div>
         <p class="text-sm text-gray-600">
-            for more information about innate c3, visit <a href="https://innatec3.com" target="_blank" class="text-primary-600 hover:underline" style="color: var(--primary-color);">innatec3.com</a>
+            for more information about innate c3, visit
+            <a href="https://innatec3.com" target="_blank" class="text-primary-600 hover:underline" style="color: var(--primary-color);">
+                innatec3.com
+            </a>
         </p>
     </div>
 </body>
